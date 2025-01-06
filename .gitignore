@@ -1,0 +1,8 @@
+*.egg-info
+*.eggs
+.ipynb_checkpoints/
+.cache
+
+build
+dist
+__pycache_
