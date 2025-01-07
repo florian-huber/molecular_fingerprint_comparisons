@@ -1,4 +1,5 @@
 from rdkit.Chem import rdFingerprintGenerator
+from rdkit import Chem
 
 
 class FingerprintGenerator:
