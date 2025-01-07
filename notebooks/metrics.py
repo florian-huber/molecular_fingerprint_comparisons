@@ -1,4 +1,5 @@
 import numba
+from numba import prange
 import numpy as np
 
 
@@ -65,7 +66,34 @@ def jaccard_index_weighted(u: np.ndarray, v: np.ndarray, weights: np.ndarray) ->
     return jaccard_score
 
 
-from numba import prange
+def jaccard_similarity_matrix(references: np.ndarray, queries: np.ndarray) -> np.ndarray:
+    """Returns matrix of jaccard indices between all-vs-all vectors of references
+    and queries.
+
+    Parameters
+    ----------
+    references
+        Reference vectors as 2D numpy array. Expects that vector_i corresponds to
+        references[i, :].
+    queries
+        Query vectors as 2D numpy array. Expects that vector_i corresponds to
+        queries[i, :].
+
+    Returns
+    -------
+    scores
+        Matrix of all-vs-all similarity scores. scores[i, j] will contain the score
+        between the vectors references[i, :] and queries[j, :].
+    """
+    # The trick to fast inference is to use float32 since it allows using BLAS
+    references = np.array(references, dtype=np.float32)  # R,N
+    queries = np.array(queries, dtype=np.float32)  # Q,N
+    intersection = references @ queries.T  # R,N @ N,Q -> R,Q
+    union = np.sum(references, axis=1, keepdims=True) + np.sum(queries,axis=1, keepdims=True).T  # R,1+1,Q -> R,Q
+    union -= intersection
+    jaccard = np.nan_to_num(intersection / union)  # R,Q
+    return jaccard
+
 
 @numba.njit
 def ruzicka_similarity(A, B):
