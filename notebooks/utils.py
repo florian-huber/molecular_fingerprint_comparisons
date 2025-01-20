@@ -61,23 +61,20 @@ def prepare_sparse_vector(sparse_fp_dict):
     return keys, values
 
 
-def compute_all_fingerprints(compounds, fpgen, count):
-    valid_smiles = []
-    valid_compounds = []
-    fingerprints = []
+def compute_fingerprints(compounds, fpgen, count=True, sparse=True):
+    if sparse:
+        fp_generator = SparseFingerprintGenerator(fpgen)
+    else:
+        fp_generator = FingerprintGenerator(fpgen)
     
+    fingerprints = []
     for inchikey, row in tqdm(compounds.iterrows(), total=len(compounds)):
-        fp = fingerprint_from_smiles_wrapper(row.smiles, fpgen, count)
+        fp = fp_generator.fingerprint_from_smiles(row.smiles, count)
         if fp is None:
             print(f"Missing fingerprint for {inchikey}: {row.smiles}")
         else:
             fingerprints.append(fp)
-            valid_smiles.append(row.smiles)
-            valid_compounds.append(inchikey)
-    
-    # Convert the list of fingerprints to a 2D NumPy array
-    fingerprints = np.vstack(fingerprints)
-    return fingerprints, valid_smiles, valid_compounds
+    return fingerprints
 
 
 def fingerprint_from_smiles_wrapper(smiles, fpgen, count=False):
