@@ -1,4 +1,8 @@
+import os
+
 import numpy as np
+import urllib.request
+from pathlib import Path
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit import Chem
 
@@ -78,3 +82,15 @@ def remove_diagonal(matrix):
     # Use the mask to remove the diagonal elements
     matrix_without_diagonal = matrix[~diagonal_mask].reshape(nr_of_rows, nr_of_cols - 1)
     return matrix_without_diagonal
+
+def download_dataset(url: str, output_dir: str = None):
+    if output_dir is None:
+        output_dir = Path(os.getcwd()).parents[0]
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    fn = Path(url).name
+
+    urllib.request.urlretrieve(url, os.path.join(output_dir, fn))
+    print(f"File {fn} was downloaded successfully.")
