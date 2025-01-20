@@ -27,6 +27,40 @@ class FingerprintGenerator:
             return None
 
 
+class SparseFingerprintGenerator:
+    def __init__(self, fpgen):
+        self.fpgen = fpgen
+
+    def fingerprint_from_smiles(self, smiles, count=False):
+        """Compute sparse fingerprint from SMILES using the generator attribute.
+        
+        Parameters:
+        smiles (str): The SMILES string of the molecule.
+        count (bool): If True, returns the count fingerprint, else the regular fingerprint.
+
+        Returns:
+        dict: A dictionary where keys are bit indices and values are counts (for count fingerprints)
+              or a list of indices for regular sparse fingerprints.
+        """
+        try:
+            mol = Chem.MolFromSmiles(smiles)
+            if count:
+                fp_dict = self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements()
+                return (prepare_sparse_vector(fp_dict))
+            return list(self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements().keys())
+        except Exception as e:
+            print(f"Error processing SMILES {smiles}: {e}")
+            return None
+
+
+def prepare_sparse_vector(sparse_fp_dict):
+    """Convert dictionaries to sorted arrays.
+    """
+    keys = np.array(sorted(sparse_fp_dict.keys()), dtype=np.int64)
+    values = np.array([sparse_fp_dict[k] for k in keys], dtype=np.int32)
+    return keys, values
+
+
 def compute_all_fingerprints(compounds, fpgen, count):
     valid_smiles = []
     valid_compounds = []
