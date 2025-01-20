@@ -173,8 +173,7 @@ def ruzicka_similarity_matrix(references: np.ndarray, queries: np.ndarray) -> np
     size1 = references.shape[0]
     size2 = queries.shape[0]
     scores = np.zeros((size1, size2)) #, dtype=np.float32)
-    for i in prange(size1):
-    #for i in range(size1):
+    for i in prange(size1)::
         for j in range(size2):
             scores[i, j] = ruzicka_similarity(references[i, :], queries[j, :])
     return scores
@@ -253,7 +252,6 @@ def ruzicka_similarity_matrix_weighted(references: np.ndarray, queries: np.ndarr
     size2 = queries.shape[0]
     scores = np.zeros((size1, size2)) #, dtype=np.float32)
     for i in prange(size1):
-    #for i in range(size1):
         for j in range(size2):
             scores[i, j] = ruzicka_similarity_weighted(references[i, :], queries[j, :], weights)
     return scores
