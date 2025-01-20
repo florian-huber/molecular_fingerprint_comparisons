@@ -107,12 +107,47 @@ def ruzicka_similarity(A, B):
     Returns:
     float: Ruzicka similarity.
     """
-    #A = np.array(A)
-    #B = np.array(B)
     
     min_sum = np.sum(np.minimum(A, B))
     max_sum = np.sum(np.maximum(A, B))
     
+    return min_sum / max_sum
+
+
+@numba.njit
+def ruzicka_similarity_sparse(keys1, values1, keys2, values2) -> float:
+    """
+    Calculate the Ruzicka similarity between two sparse count vectors.
+
+    Parameters:
+    keys1, values1 (array-like): Keys and values for the first sparse vector.
+    keys2, values2 (array-like): Keys and values for the second sparse vector.
+    """
+    i, j = 0, 0
+    min_sum, max_sum = 0.0, 0.0
+
+    while i < len(keys1) and j < len(keys2):
+        if keys1[i] == keys2[j]:
+            min_sum += min(values1[i], values2[j])
+            max_sum += max(values1[i], values2[j])
+            i += 1
+            j += 1
+        elif keys1[i] < keys2[j]:
+            max_sum += values1[i]
+            i += 1
+        else:
+            max_sum += values2[j]
+            j += 1
+
+    # Add remaining values from both vectors
+    while i < len(keys1):
+        max_sum += values1[i]
+        i += 1
+
+    while j < len(keys2):
+        max_sum += values2[j]
+        j += 1
+
     return min_sum / max_sum
 
 
