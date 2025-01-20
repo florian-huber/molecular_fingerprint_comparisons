@@ -180,6 +180,34 @@ def ruzicka_similarity_matrix(references: np.ndarray, queries: np.ndarray) -> np
     return scores
 
 
+@numba.jit(nopython=True, fastmath=True, parallel=True)
+def ruzicka_similarity_matrix_sparse(
+    references: list, queries: list) -> np.ndarray:
+    """Returns matrix of Ruzicka similarity between all-vs-all vectors of references and queries.
+
+    Parameters
+    ----------
+    references:
+        List of sparse fingerprints (tuple of two arrays: keys and counts).
+    queries
+        List of sparse fingerprints (tuple of two arrays: keys and counts).
+
+    Returns
+    -------
+    scores:
+        Matrix of all-vs-all similarity scores. scores[i, j] will contain the score
+        between the vectors references[i, :] and queries[j, :].
+    """
+    size1 = len(references)
+    size2 = len(queries)
+    scores = np.zeros((size1, size2))
+    for i in prange(size1):
+        for j in range(size2):
+            scores[i, j] = ruzicka_similarity_sparse(
+                references[i][0], references[i][1],
+                queries[j][0], queries[j][1])
+    return scores
+
 
 @numba.njit
 def ruzicka_similarity_weighted(A, B, weights):
