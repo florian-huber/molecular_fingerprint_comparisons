@@ -88,16 +88,18 @@ def fingerprint_from_smiles_wrapper(smiles, fpgen, count=False):
 
 
 @numba.njit
-def count_fingerprint_keys(fingerprints, max_keys=10**7):
+def count_fingerprint_keys(fingerprints, max_keys: int = 10**7):
     """
     Count the occurrences of keys across all sparse fingerprints.
 
     Parameters:
     fingerprints (list of tuples): 
         Each tuple contains two numpy arrays: (keys, values) for a fingerprint.
+    max_keys:
+        Maximum number of unique bits that can be counted.
 
     Returns:
-        A tuple of 3 numpy arrays (unique_keys, counts, first_instances).
+        A tuple of 3 Numpy arrays (unique_keys, counts, first_instances).
     """
 
     unique_keys = np.zeros(max_keys, dtype=np.int64)
@@ -128,8 +130,9 @@ def count_fingerprint_keys(fingerprints, max_keys=10**7):
                 first_instances[num_unique] = idx
                 num_unique += 1
 
-    # Trim the arrays to the actual size
-    return unique_keys[:num_unique], counts[:num_unique], first_instances[:num_unique]
+    # Trim arrays to the actual size and sort by key
+    bit_order = np.argsort(unique_keys[:num_unique])
+    return unique_keys[bit_order], counts[bit_order], first_instances[bit_order]
 
 
 def compute_idf(vector_array):
@@ -140,9 +143,10 @@ def compute_idf(vector_array):
 
 
 def remove_diagonal(matrix):
-    """Removes the diagonal from a matrix
+    """Removes the diagonal from a matrix.
 
-    meant for removing matches of spectra against itself. """
+    Meant for removing matches of spectra against itself.
+    """
     # Get the number of rows and columns
     nr_of_rows, nr_of_cols = matrix.shape
     if nr_of_rows != nr_of_cols:
