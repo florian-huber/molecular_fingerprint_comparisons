@@ -31,33 +31,45 @@ class SparseFingerprintGenerator:
     def __init__(self, fpgen):
         self.fpgen = fpgen
 
-    def fingerprint_from_smiles(self, smiles, count=False):
+    def fingerprint_from_smiles(self, smiles: str, count: bool = False, bit_weighing: dict = None):
         """Compute sparse fingerprint from SMILES using the generator attribute.
         
         Parameters:
-        smiles (str): The SMILES string of the molecule.
-        count (bool): If True, returns the count fingerprint, else the regular fingerprint.
+        smiles: 
+            The SMILES string of the molecule.
+        count: 
+            If True, returns the count fingerprint, else the regular fingerprint.
+        bit_weighing:
+            Optional. When a dictionary of shape {bit: value} is given, the respective bits will be multiplied
+            by the respective given value. Fingerprint bits not in this dictionary will be multiplied
+            by one, so it is generally advisable to use normalized bit weights.
 
         Returns:
         dict: A dictionary where keys are bit indices and values are counts (for count fingerprints)
               or a list of indices for regular sparse fingerprints.
         """
+        if (bit_weighing is not None) and not count:
+            raise NotImplementedError("Weighing is currently only implemented for count vectors.")
+        
         try:
             mol = Chem.MolFromSmiles(smiles)
             if count:
                 fp_dict = self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements()
-                return (prepare_sparse_vector(fp_dict))
+                return (prepare_sparse_vector(fp_dict, bit_weighing))
             return np.array(sorted(self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements().keys()), dtype=np.int64)
         except Exception as e:
             print(f"Error processing SMILES {smiles}: {e}")
             return None
 
 
-def prepare_sparse_vector(sparse_fp_dict):
+def prepare_sparse_vector(sparse_fp_dict: dict, bit_weighing: dict = None):
     """Convert dictionaries to sorted arrays.
     """
     keys = np.array(sorted(sparse_fp_dict.keys()), dtype=np.int64)
-    values = np.array([sparse_fp_dict[k] for k in keys], dtype=np.int32)
+    if bit_weighing is None:
+        values = np.array([sparse_fp_dict[k] for k in keys], dtype=np.int32)
+    else:
+        values = np.array([sparse_fp_dict[k] * bit_weighing.get(k, 1) for k in keys], dtype=np.float32)
     return keys, values
 
 
