@@ -47,7 +47,7 @@ class SparseFingerprintGenerator:
             if count:
                 fp_dict = self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements()
                 return (prepare_sparse_vector(fp_dict))
-            return list(self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements().keys())
+            return np.array(sorted(self.fpgen.GetSparseCountFingerprint(mol).GetNonzeroElements().keys()), dtype=np.int64)
         except Exception as e:
             print(f"Error processing SMILES {smiles}: {e}")
             return None
