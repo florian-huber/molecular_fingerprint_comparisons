@@ -66,6 +66,37 @@ def jaccard_index_weighted(u: np.ndarray, v: np.ndarray, weights: np.ndarray) ->
     return jaccard_score
 
 
+@numba.njit
+def jaccard_index_sparse(keys1, keys2) -> float:
+    """
+    Calculate the Jaccard similarity between two sparse binary vectors.
+
+    Parameters:
+    keys1, keys2 (array-like): Keys for the first and second sparse vectors (sorted arrays).
+
+    Returns:
+    float: The Jaccard similarity (or index).
+    """
+    i, j = 0, 0
+    intersection = 0
+
+    # Traverse both key arrays
+    while i < len(keys1) and j < len(keys2):
+        if keys1[i] == keys2[j]:
+            intersection += 1
+            i += 1
+            j += 1
+        elif keys1[i] < keys2[j]:
+            i += 1
+        else:
+            j += 1
+
+    # Calculate union size
+    union = len(keys1) + len(keys2) - intersection
+
+    return intersection / union if union > 0 else 0.0
+
+
 def jaccard_similarity_matrix(references: np.ndarray, queries: np.ndarray) -> np.ndarray:
     """Returns matrix of jaccard indices between all-vs-all vectors of references
     and queries.
@@ -93,6 +124,35 @@ def jaccard_similarity_matrix(references: np.ndarray, queries: np.ndarray) -> np
     union -= intersection
     jaccard = np.nan_to_num(intersection / union)  # R,Q
     return jaccard
+
+
+@numba.jit(nopython=True, fastmath=True, parallel=True)
+def jaccard_similarity_matrix_sparse(
+        references: list, queries: list) -> np.ndarray:
+    """Returns matrix of Jaccard similarity between all-vs-all vectors of references and queries.
+
+    Parameters
+    ----------
+    references:
+        List of sparse fingerprints (arrays with keys).
+    queries
+        List of sparse fingerprints (arrays with keys).
+
+    Returns
+    -------
+    scores:
+        Matrix of all-vs-all similarity scores. scores[i, j] will contain the score
+        between the vectors references[i, :] and queries[j, :].
+    """
+    size1 = len(references)
+    size2 = len(queries)
+    scores = np.zeros((size1, size2))
+    for i in prange(size1):
+        for j in range(size2):
+            scores[i, j] = jaccard_index_sparse(
+                references[i],
+                queries[j])
+    return scores
 
 
 @numba.njit
@@ -173,7 +233,7 @@ def ruzicka_similarity_matrix(references: np.ndarray, queries: np.ndarray) -> np
     size1 = references.shape[0]
     size2 = queries.shape[0]
     scores = np.zeros((size1, size2)) #, dtype=np.float32)
-    for i in prange(size1)::
+    for i in prange(size1):
         for j in range(size2):
             scores[i, j] = ruzicka_similarity(references[i, :], queries[j, :])
     return scores
