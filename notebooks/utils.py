@@ -87,8 +87,53 @@ def fingerprint_from_smiles_wrapper(smiles, fpgen, count=False):
         return None
 
 
+@numba.njit
+def count_fingerprint_keys(fingerprints, max_keys=10**7):
+    """
+    Count the occurrences of keys across all sparse fingerprints.
+
+    Parameters:
+    fingerprints (list of tuples): 
+        Each tuple contains two numpy arrays: (keys, values) for a fingerprint.
+
+    Returns:
+        A tuple of 3 numpy arrays (unique_keys, counts, first_instances).
+    """
+
+    unique_keys = np.zeros(max_keys, dtype=np.int64)
+    counts = np.zeros(max_keys, dtype=np.int32)
+    first_instances = np.zeros(max_keys, dtype=np.int16)  # Store first fingerprint where the respective bit occurred (for later analysis)
+    num_unique = 0
+    reached_max_keys = False
+
+    for idx, (keys, _) in enumerate(fingerprints):
+        for key in keys:
+            # Check if the key is already in unique_keys
+            found = False
+            for i in range(num_unique):
+                if unique_keys[i] == key:
+                    counts[i] += 1
+                    found = True
+                    break
+            # If the key is new, add it
+            if not found:
+                if (num_unique >= max_keys):
+                    if not reached_max_keys:
+                        print(f"Maximum number of keys was reached at fingerprint number {idx}.")
+                        print("Consider raising the max_keys argument.")
+                        reached_max_keys = True
+                    continue
+                unique_keys[num_unique] = key
+                counts[num_unique] = 1
+                first_instances[num_unique] = idx
+                num_unique += 1
+
+    # Trim the arrays to the actual size
+    return unique_keys[:num_unique], counts[:num_unique], first_instances[:num_unique]
+
+
 def compute_idf(vector_array):
-    """Compute inverse document frequenccy (IDF).duplicates
+    """Compute inverse document frequency (IDF).duplicates
     """
     N = vector_array.shape[0]
     return np.log(N / (vector_array > 0).sum(axis=0))
