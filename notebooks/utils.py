@@ -1,10 +1,12 @@
 import os
 
 import numpy as np
+import numba
 import urllib.request
 from pathlib import Path
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit import Chem
+from tqdm import tqdm
 
 
 class FingerprintGenerator:
