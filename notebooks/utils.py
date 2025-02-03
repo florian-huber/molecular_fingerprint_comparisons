@@ -153,6 +153,57 @@ def count_fingerprint_keys(fingerprints, max_keys: int = 10**7):
     return unique_keys[bit_order], counts[bit_order], first_instances[bit_order]
 
 
+import numpy as np
+from scipy.stats import rankdata
+
+
+def percentile_scores(similarities: np.ndarray) -> np.ndarray:
+    """
+    Computes percentile ranks (0..100) for the unique upper-triangular (k=1) entries
+    of a symmetrical similarity matrix using scipy's rankdata with average ranks.
+    The results are then mirrored to the lower triangle so that the returned matrix
+    is again symmetric.
+    
+    The diagonal is left as-is (default: 0.0), but you can adjust it if needed.
+
+    Parameters
+    ----------
+    similarities : np.ndarray
+        2D symmetric similarity matrix, shape (N, N).
+
+    Returns
+    -------
+    np.ndarray
+        A new matrix of the same shape, where the upper-triangular entries (and their
+        mirrored lower-triangular counterparts) have been replaced by percentile ranks.
+        The diagonal is untouched (default = 0).
+    """
+    # Step 1: Extract the upper-triangular entries (excluding diagonal)
+    iu1 = np.triu_indices(similarities.shape[0], k=1)
+    arr = similarities[iu1]
+
+    # Step 2: Rank them using 'average' method (duplicates get same rank)
+    ranks = rankdata(arr, method="average")  # Ranks in [1..len(arr)]
+    
+    # Step 3: Convert ranks to percentile range [0..100]
+    percentiles = (ranks - 1) / (len(ranks) - 1) * 100 if len(ranks) > 1 else np.zeros_like(ranks)
+
+    # Step 4: Create a new matrix for output, same shape and dtype
+    percentile_matrix = np.zeros_like(similarities, dtype=float)
+    
+    # Step 5: Place the percentile scores back into the upper triangle
+    percentile_matrix[iu1] = percentiles
+
+    # Step 6: Mirror to the lower triangle
+    percentile_matrix = percentile_matrix + percentile_matrix.T
+
+    # Optionally, keep or modify the diagonal; default = 0.0
+    # If you'd like to keep the original diagonal, uncomment this line:
+    # np.fill_diagonal(percentile_matrix, np.diag(similarities))
+
+    return percentile_matrix
+
+
 def compute_idf(vector_array):
     """Compute inverse document frequency (IDF).duplicates
     """
