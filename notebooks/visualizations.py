@@ -6,7 +6,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
-                       colormap="viridis", ignore_diagonal=True, filename=None):
+                       colormap="viridis", ignore_diagonal=True,
+                       add_region_percentage=True, filename=None,
+                      ):
     """
     Generates a heatmap comparison of two similarity matrices.
     
@@ -57,7 +59,7 @@ def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
             sub_matrix = hist[i:i+step, j:j+step]
             subsection_sum = np.sum(sub_matrix)
             
-            if subsection_sum > 0:
+            if subsection_sum > 0 and add_region_percentage:
                 # Compute the center of the bin for text placement
                 x_center = (x_edges[i] + x_edges[min(i + step, bins - 1)]) / 2
                 y_center = (y_edges[j] + y_edges[min(j + step, bins - 1)]) / 2
