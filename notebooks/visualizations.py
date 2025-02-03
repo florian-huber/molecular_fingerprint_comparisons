@@ -5,6 +5,83 @@ import matplotlib.patheffects as path_effects
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
+def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
+                       colormap="viridis", ignore_diagonal=True, filename=None):
+    """
+    Generates a heatmap comparison of two similarity matrices.
+    
+    Parameters:
+    similarities1 (ndarray): First similarity matrix (NxN) with values in a comparable range.
+    similarities2 (ndarray): Second similarity matrix (NxN) with values in a comparable range.
+    label1 (str): Label for the x-axis.
+    label2 (str): Label for the y-axis.
+    bins (int, optional): Number of bins for the 2D histogram (default: 50).
+    colormap (str, optional): Colormap used for visualization (default: "viridis").
+    ignore_diagonal (bool, optional): If True, excludes the diagonal values (default: True).
+    filename (str, optional): If provided, saves the heatmap to the specified file.
+    """
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+    
+    # Select upper triangle indices to ignore diagonal if necessary
+    n = similarities1.shape[0]
+    mask_indices = np.triu_indices(n, k=1 if ignore_diagonal else 0)
+    
+    # Compute the 2D histogram
+    hist, x_edges, y_edges = np.histogram2d(
+        similarities1[mask_indices], 
+        similarities2[mask_indices], 
+        bins=bins
+    )
+    
+    # Plot the heatmap using imshow with a logarithmic color scale
+    im = ax.imshow(
+        hist.T, origin='lower', aspect='equal',
+        extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
+        cmap=colormap, norm=LogNorm(vmin=1, vmax=np.max(hist))
+    )
+    
+    # Create an axis of the same height for the colorbar
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.1)
+    cb = fig.colorbar(im, cax=cax)
+    cb.set_label("Count")
+    
+    # Compute total count for percentage calculations
+    total_count = len(mask_indices[0])
+    
+    # Add text annotations for each 5x5 section of bins
+    step = bins // 5
+    for i in range(0, bins, step):
+        for j in range(0, bins, step):
+            sub_matrix = hist[i:i+step, j:j+step]
+            subsection_sum = np.sum(sub_matrix)
+            
+            if subsection_sum > 0:
+                # Compute the center of the bin for text placement
+                x_center = (x_edges[i] + x_edges[min(i + step, bins - 1)]) / 2
+                y_center = (y_edges[j] + y_edges[min(j + step, bins - 1)]) / 2
+                
+                # Add text annotation
+                ax.text(
+                    x_center, y_center, f"{(100 * subsection_sum / total_count):.2f}%",
+                    color="white", ha="center", va="center", fontsize=6, zorder=2
+                )
+    
+    # Configure grid, labels, and layout
+    ax.grid(True, zorder=1)
+    ax.set_xlabel(label1)
+    ax.set_ylabel(label2)
+    plt.tight_layout()
+    
+    # Save plot if a filename is provided
+    if filename:
+        plt.savefig(filename)
+    
+    # Show the plot
+    plt.show()
+
+
 ###############################################################################
 # 1) A helper to create non-uniform bin edges (finer near 100%)
 ###############################################################################
