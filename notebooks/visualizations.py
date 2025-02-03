@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import matplotlib.patheffects as path_effects
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 ###############################################################################
@@ -106,7 +108,11 @@ def heatmap_comparison_scaled_bins(similarities1, similarities2,
         cmap=colormap,
         norm=LogNorm(vmin=1, vmax=hist.max() if hist.max() > 0 else 1)
     )
-    cb = fig.colorbar(im, ax=ax)
+    
+    # Create an axis of the same height for the colorbar
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.1)  # Adjust size and padding as needed
+    cb = fig.colorbar(im, cax=cax)
     cb.set_label("Count")
 
     # -------------------------------------------------------------------------
@@ -160,12 +166,17 @@ def heatmap_comparison_scaled_bins(similarities1, similarities2,
                 x_center = 0.5 * (x_low + x_high)
                 y_center = 0.5 * (y_low + y_high)
                 
-                ax.text(
+                txt = ax.text(
                     x_center, y_center,
                     f"{fraction:.2f}%", color="white",
-                    ha="center", va="center", fontsize=6
+                    ha="center", va="center", fontsize=8
                 )
 
+                # Add black outline
+                txt.set_path_effects([
+                    path_effects.Stroke(linewidth=1.5, foreground="black"),
+                    path_effects.Normal()
+                ])
     # -------------------------------------------------------------------------
     # 5) Axis Ticks: major vs. minor
     #    For example:
