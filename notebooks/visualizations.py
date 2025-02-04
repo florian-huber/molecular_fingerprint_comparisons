@@ -6,7 +6,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
-                       colormap="viridis", ignore_diagonal=True,
+                       colormap="viridis", ignore_diagonal=True, 
                        add_region_percentage=True, filename=None,
                       ):
     """
@@ -287,8 +287,8 @@ def heatmap_comparison_scaled_bins(similarities1, similarities2,
     #ax.grid(which='minor', color='gray', linestyle='-', linewidth=0.5, alpha=0.3)
     
     # Labels
-    ax.set_xlabel(label1 + " (percentiles)")
-    ax.set_ylabel(label2 + " (percentiles)")
+    ax.set_xlabel(label1)
+    ax.set_ylabel(label2)
     
     plt.tight_layout()
     if filename:
