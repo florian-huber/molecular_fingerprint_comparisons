@@ -8,3 +8,6 @@ figures/
 build
 dist
 __pycache__
+
+*.npy
+*.pickle
