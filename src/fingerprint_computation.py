@@ -121,6 +121,8 @@ def prepare_sparse_vector(
         values = np.array([sparse_fp_dict[k] for k in keys], dtype=np.int32)
     elif bit_weighing is None:
         values = np.array([scaling(sparse_fp_dict[k], bit_scaling) for k in keys], dtype=np.float32)
+    elif bit_scaling is None:
+        values = np.array([sparse_fp_dict[k] * bit_weighing.get(k, 1) for k in keys], dtype=np.float32)
     else:
         values = np.array([scaling(sparse_fp_dict[k], bit_scaling) * bit_weighing.get(k, 1) for k in keys], dtype=np.float32)
     return keys, values
