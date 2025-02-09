@@ -1,5 +1,6 @@
 import numpy as np
 import numba
+from numba import types, typed
 from rdkit import Chem
 from tqdm import tqdm
 
@@ -156,51 +157,52 @@ def compute_fingerprints_from_smiles(
 
 
 @numba.njit
-def count_fingerprint_keys(fingerprints, max_keys: int = 10**7):
+def count_fingerprint_keys(fingerprints):
     """
-    Count the occurrences of keys across all sparse fingerprints.
-
+    Count the occurrences of keys across all sparse fingerprints using two dictionaries
+    (one for counts, one for the first fingerprint index) for fast lookup.
+    
     Parameters:
-    fingerprints (list of tuples): 
-        Each tuple contains two numpy arrays: (keys, values) for a fingerprint.
-    max_keys:
-        Maximum number of unique bits that can be counted.
-
+        fingerprints (list of tuples): Each tuple contains two numpy arrays:
+            (keys, values) for a fingerprint.
+    
     Returns:
-        A tuple of 3 Numpy arrays (unique_keys, counts, first_instances).
+        A tuple of 3 Numpy arrays (unique_keys, counts, first_instances) where:
+            - unique_keys: Sorted unique bit keys.
+            - counts: The number of occurrences of each key.
+            - first_instances: The first fingerprint index where each key occurred.
     """
-
-    unique_keys = np.zeros(max_keys, dtype=np.int64)
-    counts = np.zeros(max_keys, dtype=np.int32)
-    first_instances = np.zeros(max_keys, dtype=np.int16)  # Store first fingerprint where the respective bit occurred (for later analysis)
-    num_unique = 0
-    reached_max_keys = False
-
-    for idx, (keys, _) in enumerate(fingerprints):
+    # Create dictionaries with key type int64 and value type int32.
+    counts = typed.Dict.empty(key_type=types.int64, value_type=types.int32)
+    first_instance = typed.Dict.empty(key_type=types.int64, value_type=types.int32)
+    
+    # Loop over each fingerprint.
+    for i in range(len(fingerprints)):
+        keys, _ = fingerprints[i]
         for key in keys:
-            # Check if the key is already in unique_keys
-            found = False
-            for i in range(num_unique):
-                if unique_keys[i] == key:
-                    counts[i] += 1
-                    found = True
-                    break
-            # If the key is new, add it
-            if not found:
-                if (num_unique >= max_keys):
-                    if not reached_max_keys:
-                        print(f"Maximum number of keys was reached at fingerprint number {idx}.")
-                        print("Consider raising the max_keys argument.")
-                        reached_max_keys = True
-                    continue
-                unique_keys[num_unique] = key
-                counts[num_unique] = 1
-                first_instances[num_unique] = idx
-                num_unique += 1
-
-    # Trim arrays to the actual size and sort by key
-    bit_order = np.argsort(unique_keys[:num_unique])
-    return unique_keys[bit_order], counts[bit_order], first_instances[bit_order]
+            if key in counts:
+                counts[key] += 1
+            else:
+                counts[key] = 1
+                first_instance[key] = i
+    
+    # Allocate arrays to hold the results.
+    n = len(counts)
+    unique_keys = np.empty(n, dtype=np.int64)
+    count_arr   = np.empty(n, dtype=np.int32)
+    first_arr   = np.empty(n, dtype=np.int32)
+    
+    # Transfer dictionary contents to arrays.
+    idx = 0
+    for key in counts:
+        unique_keys[idx] = key
+        count_arr[idx] = counts[key]
+        first_arr[idx] = first_instance[key]
+        idx += 1
+    
+    # Sort by key.
+    order = np.argsort(unique_keys)
+    return unique_keys[order], count_arr[order], first_arr[order]
 
 
 ### ------------------------
