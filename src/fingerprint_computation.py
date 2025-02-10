@@ -9,7 +9,7 @@ class FingerprintGenerator:
     def __init__(self, fpgen):
         self.fpgen = fpgen
 
-    def fingerprint_from_smiles(self, smiles, count=False):
+    def fingerprint_from_smiles(self, smiles, count=False, bit_weighing=None):
         """Compute fingerprint from SMILES using the generator attribute.
         
         Parameters:
@@ -19,11 +19,20 @@ class FingerprintGenerator:
         Returns:
         np.array: The fingerprint as a NumPy array, or None if there's an error.
         """
+        if (bit_weighing is not None) and not count:
+            raise NotImplementedError("Weighing is currently only implemented for count vectors.")
+
         mol = get_mol_from_smiles(smiles)
         try:
             if count:
                 return self.fpgen.GetCountFingerprintAsNumPy(mol)
-            return self.fpgen.GetFingerprintAsNumPy(mol)
+            fp = self.fpgen.GetFingerprintAsNumPy(mol)
+            if bit_weighing is None:
+                return fp
+            elif bit_scaling.lower() == "log":
+                return np.log(1 + fp)
+            else:
+                raise ValueError("Expected bit_scaling to be 'log' or 'None'.")
         except Exception as e:
             print(f"Error processing SMILES {smiles}: {e}")
             return None
@@ -148,12 +157,14 @@ def compute_fingerprints_from_smiles(
         if sparse:
             fp = fp_generator.fingerprint_from_smiles(smiles, count, bit_scaling, bit_weighing)
         else:
-            fp = fp_generator.fingerprint_from_smiles(smiles, count)
+            fp = fp_generator.fingerprint_from_smiles(smiles, count, bit_weighing)
         if fp is None:
             print(f"Missing fingerprint for element {i}: {smiles}")
         else:
             fingerprints.append(fp)
-    return fingerprints
+    if sparse:
+        return fingerprints
+    return np.stack(fingerprints)
 
 
 @numba.njit
