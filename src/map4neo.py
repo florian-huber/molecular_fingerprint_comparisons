@@ -35,6 +35,7 @@ class MAP4neo:
         dimensions: int = 2048,
         radius: int = 2,
         include_duplicated_shingles: bool = False,
+        includeChirality: bool = False,
         seed: int = 75434278,
     ):
         """
@@ -55,7 +56,7 @@ class MAP4neo:
         self.radius: int = radius
         self.include_duplicated_shingles: bool = include_duplicated_shingles
         self.encoder: MHFPEncoder = MHFPEncoder(dimensions, seed=seed)
-        self.fpgen = AllChem.GetMorganGenerator(radius=radius)
+        self.fpgen = AllChem.GetMorganGenerator(radius=radius, includeChirality=includeChirality)
 
     def calculate(self, mol: Mol) -> np.ndarray:
         """
