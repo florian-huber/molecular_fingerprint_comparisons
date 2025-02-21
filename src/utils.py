@@ -45,10 +45,6 @@ def percentile_scores(similarities: np.ndarray) -> np.ndarray:
     # Step 6: Mirror to the lower triangle
     percentile_matrix = percentile_matrix + percentile_matrix.T
 
-    # Optionally, keep or modify the diagonal; default = 0.0
-    # If you'd like to keep the original diagonal, uncomment this line:
-    # np.fill_diagonal(percentile_matrix, np.diag(similarities))
-
     return percentile_matrix
 
 
