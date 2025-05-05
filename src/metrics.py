@@ -35,6 +35,40 @@ def jaccard_similarity_matrix_weighted(references: np.ndarray, queries: np.ndarr
 
 
 @numba.njit
+def jaccard_index(u: np.ndarray, v: np.ndarray) -> np.float64:
+    r"""Computes a weighted Jaccard-index (or Jaccard similarity coefficient) of two boolean
+    1-D arrays.
+    The Jaccard index between 1-D boolean arrays `u` and `v`,
+    is defined as
+
+    .. math::
+
+       J(u,v) = \\frac{u \cap v}
+                {u \cup v}
+
+    Parameters
+    ----------
+    u :
+        Input array. Expects boolean vector.
+    v :
+        Input array. Expects boolean vector.
+
+    Returns
+    -------
+    jaccard_similarity
+        The Jaccard similarity coefficient between vectors `u` and `v`.
+    """
+    u_or_v = np.bitwise_or(u != 0, v != 0)
+    u_and_v = np.bitwise_and(u != 0, v != 0)
+    jaccard_score = 0
+    if u_or_v.sum() != 0:
+        u_or_v = u_or_v
+        u_and_v = u_and_v
+        jaccard_score = np.float64(u_and_v.sum()) / np.float64(u_or_v.sum())
+    return jaccard_score
+
+
+@numba.njit
 def jaccard_index_weighted(u: np.ndarray, v: np.ndarray, weights: np.ndarray) -> np.float64:
     r"""Computes a weighted Jaccard-index (or Jaccard similarity coefficient) of two boolean
     1-D arrays.
