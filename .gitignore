@@ -4,6 +4,7 @@
 .cache
 data/
 figures/
+experiments/
 
 build
 dist

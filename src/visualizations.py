@@ -6,7 +6,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
-                       colormap="viridis", ignore_diagonal=True, 
+                       colormap="inferno", ignore_diagonal=True, 
                        add_region_percentage=True, filename=None,
                       ):
     """
@@ -65,10 +65,19 @@ def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
                 y_center = (y_edges[j] + y_edges[min(j + step, bins - 1)]) / 2
                 
                 # Add text annotation
-                ax.text(
-                    x_center, y_center, f"{(100 * subsection_sum / total_count):.2f}%",
-                    color="white", ha="center", va="center", fontsize=6, zorder=2
+                txt = ax.text(
+                    x_center, y_center,
+                    f"{(100 * subsection_sum / total_count):.2f}%",
+                    color="white",
+                    ha="center", va="center",
+                    fontsize=8, zorder=2
                 )
+
+                # Add black outline
+                txt.set_path_effects([
+                    path_effects.Stroke(linewidth=1.5, foreground="black"),
+                    path_effects.Normal()
+                ])
     
     # Configure grid, labels, and layout
     ax.grid(True, zorder=1)
@@ -141,7 +150,7 @@ def percentile_to_uniform(p, edges):
 ###############################################################################
 def heatmap_comparison_scaled_bins(similarities1, similarities2, 
                                    label1, label2,
-                                   bins=50, colormap="viridis",
+                                   bins=50, colormap="inferno",
                                    ignore_diagonal=True, epsilon=0.01,
                                    add_region_percentage=True,
                                    filename=None):
