@@ -12,3 +12,4 @@ __pycache__
 
 *.npy
 *.pickle
+.idea/
