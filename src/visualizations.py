@@ -8,6 +8,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
                        colormap="inferno", ignore_diagonal=True, 
                        add_region_percentage=True, filename=None,
+                       dpi=300,
                       ):
     """
     Generates a heatmap comparison of two similarity matrices.
@@ -87,7 +88,7 @@ def heatmap_comparison(similarities1, similarities2, label1, label2, bins=50,
     
     # Save plot if a filename is provided
     if filename:
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=dpi)
     
     # Show the plot
     plt.show()
