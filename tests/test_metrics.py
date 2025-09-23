@@ -9,13 +9,13 @@ sys.path.insert(0, SRC_DIR)
 
 from metrics import jaccard_index_sparse, jaccard_similarity_matrix
 from metrics import (
-    ruzicka_similarity,
-    ruzicka_similarity_sparse_numba,
+    generalized_tanimoto_similarity,
+    generalized_tanimoto_similarity_sparse_numba,
     occupied_bit_mapping,
     sparse_fingerprint_to_csr,
-    ruzicka_similarity_matrix,
-    ruzicka_similarity_matrix_sparse_all_vs_all,
-    ruzicka_similarity_matrix_sparse,
+    generalized_tanimoto_similarity_matrix,
+    generalized_tanimoto_similarity_matrix_sparse_all_vs_all,
+    generalized_tanimoto_similarity_matrix_sparse,
 )
 
 
@@ -47,42 +47,42 @@ def test_jaccard_implementation_consistency():
             assert jaccard_sparse == pytest.approx(jaccard_dense[i, j])
 
 # ----------------------------------------
-# Tests for ruzicka_similarity (dense)
+# Tests for generalized_tanimoto_similarity (dense)
 # ----------------------------------------
 
-def test_ruzicka_similarity_simple():
+def test_generalized_tanimoto_similarity_simple():
     # A = [1, 2, 3], B = [2, 1, 0]
     # min_sum = 1 + 1 + 0 = 2
     # max_sum = 2 + 2 + 3 = 7
     # expected = 2 / 7
     A = np.array([1.0, 2.0, 3.0], dtype=np.float64)
     B = np.array([2.0, 1.0, 0.0], dtype=np.float64)
-    sim = ruzicka_similarity(A, B)
+    sim = generalized_tanimoto_similarity(A, B)
     assert pytest.approx(sim, rel=1e-8) == 2.0 / 7.0
 
     # identical vectors should give 1.0
     v = np.array([0.0, 5.0, 2.0, 7.0], dtype=np.float64)
-    assert ruzicka_similarity(v, v) == pytest.approx(1.0)
+    assert generalized_tanimoto_similarity(v, v) == pytest.approx(1.0)
 
     # one zero vector and one non-zero: similarity = 0
     zero = np.zeros(4, dtype=np.float64)
     nonzero = np.array([1.0, 0.0, 2.0, 3.0], dtype=np.float64)
-    assert ruzicka_similarity(zero, nonzero) == pytest.approx(0.0)
+    assert generalized_tanimoto_similarity(zero, nonzero) == pytest.approx(0.0)
 
 
-def test_ruzicka_distance_dense_mismatched_shapes():
+def test_generalized_tanimoto_distance_dense_mismatched_shapes():
     # A has shape (10, 3), B has shape (5, 4) → columns do not match
     A = np.random.random((10, 3))
     B = np.random.random((5, 4))
 
     with pytest.raises(AssertionError) as excinfo:
-        _ = ruzicka_similarity_matrix(A, B)
+        _ = generalized_tanimoto_similarity_matrix(A, B)
 
     msg = str(excinfo.value)
     assert "Vector sizes do not match" in msg
 
 
-def test_ruzicka_implementation_consistency():
+def test_generalized_tanimoto_implementation_consistency():
     """Test if sparse and dense implementation give the same results."""
     binary_vectors = np.array([
         [1, 4, 0, 0, 1, 0, 0, 1],
@@ -91,7 +91,7 @@ def test_ruzicka_implementation_consistency():
         [0, 1, 0, 0, 0, 0, 1, 0],
     ], dtype=np.int32)
 
-    ruzicka_dense = ruzicka_similarity_matrix(binary_vectors, binary_vectors)
+    generalized_tanimoto_dense = generalized_tanimoto_similarity_matrix(binary_vectors, binary_vectors)
 
     for i in range(len(binary_vectors)):
         for j in range(len(binary_vectors)):
@@ -100,15 +100,15 @@ def test_ruzicka_implementation_consistency():
             keys2 = np.where(binary_vectors[j] >= 1)[0]
             values2 = binary_vectors[j][keys2]
             
-            ruzicka_score = ruzicka_similarity(binary_vectors[i], binary_vectors[j])
-            assert ruzicka_score == pytest.approx(ruzicka_dense[i, j])
+            generalized_tanimoto_score = generalized_tanimoto_similarity(binary_vectors[i], binary_vectors[j])
+            assert generalized_tanimoto_score == pytest.approx(generalized_tanimoto_dense[i, j])
 
-            ruzicka_sparse = ruzicka_similarity_sparse_numba(keys1, values1, keys2, values2)
-            assert ruzicka_sparse == pytest.approx(ruzicka_dense[i, j])
+            generalized_tanimoto_sparse = generalized_tanimoto_similarity_sparse_numba(keys1, values1, keys2, values2)
+            assert generalized_tanimoto_sparse == pytest.approx(generalized_tanimoto_dense[i, j])
 
 
 # ---------------------------------------------------
-# Tests for ruzicka_similarity_sparse_numba (sparse)
+# Tests for generalized_tanimoto_similarity_sparse_numba (sparse)
 # ---------------------------------------------------
 
 @pytest.mark.parametrize("keys1, vals1, keys2, vals2, expected", [
@@ -137,8 +137,8 @@ def test_ruzicka_implementation_consistency():
         0.0
     ),
 ])
-def test_ruzicka_similarity_sparse_numba(keys1, vals1, keys2, vals2, expected):
-    sim = ruzicka_similarity_sparse_numba(keys1, vals1, keys2, vals2)
+def test_generalized_tanimoto_similarity_sparse_numba(keys1, vals1, keys2, vals2, expected):
+    sim = generalized_tanimoto_similarity_sparse_numba(keys1, vals1, keys2, vals2)
     assert pytest.approx(sim, rel=1e-8) == expected
 
 
@@ -172,18 +172,18 @@ def test_occupied_bit_mapping_and_csr_conversion():
 
 
 # ---------------------------------------------------
-# Tests for ruzicka_similarity_matrix_sparse_all_vs_all
+# Tests for generalized_tanimoto_similarity_matrix_sparse_all_vs_all
 # ---------------------------------------------------
 
-def test_ruzicka_similarity_matrix_sparse_all_vs_all_two_vectors():
+def test_generalized_tanimoto_similarity_matrix_sparse_all_vs_all_two_vectors():
     # fingerprint 1: keys [0,1] with values [1,2] → dense [1,2,0]
     # fingerprint 2: keys [1,2] with values [2,3] → dense [0,2,3]
     fp1 = (np.array([0, 1], dtype=np.int64), np.array([1.0, 2.0], dtype=np.float64))
     fp2 = (np.array([1, 2], dtype=np.int64), np.array([2.0, 3.0], dtype=np.float64))
     fingerprints = [fp1, fp2]
 
-    # Compute the 2×2 Ruzicka matrix.
-    S = ruzicka_similarity_matrix_sparse_all_vs_all(fingerprints)
+    # Compute the 2×2 generalized_tanimoto matrix.
+    S = generalized_tanimoto_similarity_matrix_sparse_all_vs_all(fingerprints)
 
     # Diagonals must be 1.0
     assert S.shape == (2, 2)
@@ -200,10 +200,10 @@ def test_ruzicka_similarity_matrix_sparse_all_vs_all_two_vectors():
 
 
 # ---------------------------------------------------
-# Tests for ruzicka_similarity_matrix_sparse (cross‐set)
+# Tests for generalized_tanimoto_similarity_matrix_sparse (cross‐set)
 # ---------------------------------------------------
 
-def test_ruzicka_similarity_matrix_sparse_cross():
+def test_generalized_tanimoto_similarity_matrix_sparse_cross():
     # Using the same two fingerprints as above,
     # but treat them as two different sets.
     fp1 = (np.array([0, 1], dtype=np.int64), np.array([1.0, 2.0], dtype=np.float64))
@@ -211,7 +211,7 @@ def test_ruzicka_similarity_matrix_sparse_cross():
 
     X1 = [fp1]
     X2 = [fp2]
-    S_cross = ruzicka_similarity_matrix_sparse(X1, X2)
+    S_cross = generalized_tanimoto_similarity_matrix_sparse(X1, X2)
 
     # Should be 1×1 matrix whose single entry is same 1/3
     assert S_cross.shape == (1, 1)
@@ -229,7 +229,7 @@ def test_consistency_dense_and_sparse_numba():
     B = rng.integers(low=0, high=5, size=5).astype(np.float64)
 
     # Compute dense version
-    dens_sim = ruzicka_similarity(A, B)
+    dens_sim = generalized_tanimoto_similarity(A, B)
 
     # Convert to sparse format: only keep indices where values > 0
     keys1 = np.nonzero(A)[0].astype(np.int64)
@@ -237,5 +237,5 @@ def test_consistency_dense_and_sparse_numba():
     keys2 = np.nonzero(B)[0].astype(np.int64)
     vals2 = B[keys2]
 
-    sparse_sim = ruzicka_similarity_sparse_numba(keys1, vals1, keys2, vals2)
+    sparse_sim = generalized_tanimoto_similarity_sparse_numba(keys1, vals1, keys2, vals2)
     assert pytest.approx(dens_sim, rel=1e-8) == sparse_sim

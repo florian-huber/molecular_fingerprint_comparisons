@@ -229,7 +229,7 @@ def generalized_tanimoto_similarity_matrix_sparse_all_vs_all(fingerprints) -> np
     # Compute pairwise Manhattan distances.
     manhattan = pairwise_distances(X, metric='manhattan')
 
-    return compute_ruzicka_from_manhattan_symmetric(norms, manhattan)
+    return compute_generalized_tanimoto_from_manhattan_symmetric(norms, manhattan)
 
 
 def generalized_tanimoto_similarity_matrix_sparse(fingerprints_1, fingerprints_2) -> np.ndarray:
