@@ -29,10 +29,6 @@ class FingerprintGenerator:
             fp = self.fpgen.GetFingerprintAsNumPy(mol)
             if bit_weighing is None:
                 return fp
-            elif bit_scaling.lower() == "log":
-                return np.log(1 + fp)
-            else:
-                raise ValueError("Expected bit_scaling to be 'log' or 'None'.")
         except Exception as e:
             print(f"Error processing SMILES {smiles}: {e}")
             return None
