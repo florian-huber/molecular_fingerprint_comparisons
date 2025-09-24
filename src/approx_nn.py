@@ -27,6 +27,7 @@ from sklearn.pipeline import Pipeline
 
 from rdkit.Chem import rdFingerprintGenerator
 from pynndescent import NNDescent
+from metrics import ruzicka_similarity_sparse_numba
 
 from fingerprint_computation import compute_fingerprints_from_smiles
 
@@ -134,9 +135,7 @@ def ruzicka_candidate_search(
     return candidate_idx, candidate_scores
 
 
-import numba
-from numba import prange
-from metrics import ruzicka_similarity_sparse_numba
+
 
 
 @numba.jit(nopython=True, fastmath=True, parallel=True)

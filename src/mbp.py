@@ -1,18 +1,11 @@
 import itertools
 from typing import List, Set, Dict, Iterable, Optional, Tuple
-from collections import defaultdict, Counter
-from multiprocessing import Pool
+from collections import defaultdict
 from multiprocessing.dummy import Pool as ThreadPool
 
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib import cm
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
 
-from rdkit.Chem import MolToSmiles, Mol
+from rdkit.Chem import Mol
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdmolops import GetDistanceMatrix
 
