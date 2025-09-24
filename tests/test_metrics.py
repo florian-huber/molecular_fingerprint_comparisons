@@ -2,11 +2,6 @@ import pytest
 import numpy as np
 import os
 import sys
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_DIR = os.path.join(ROOT, "src")
-sys.path.insert(0, SRC_DIR)
-
-
 from metrics import jaccard_index_sparse, jaccard_similarity_matrix
 from metrics import (
     generalized_tanimoto_similarity,
@@ -17,6 +12,9 @@ from metrics import (
     generalized_tanimoto_similarity_matrix_sparse_all_vs_all,
     generalized_tanimoto_similarity_matrix_sparse,
 )
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR = os.path.join(ROOT, "src")
+sys.path.insert(0, SRC_DIR)
 
 
 def test_jaccard_sparse_basic():
