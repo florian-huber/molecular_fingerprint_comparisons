@@ -1,2 +1,6 @@
-# Beyond the boring bits: more subtle similarity measures using bit frequency weighing and count vectors
+# Count your bits: more subtle similarity measures using larger radius count vectors
 Code used to analyse and compare different molecular fingerprints.
+
+
+**All still in preprint stadium**
+(will undergo more cleaning and documentation)
