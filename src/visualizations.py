@@ -214,12 +214,7 @@ def heatmap_comparison_scaled_bins(similarities1, similarities2,
     # Convert major cutoffs to uniform space
     x_major_coords = [percentile_to_uniform(p, x_edges) for p in major_percentiles]
     y_major_coords = [percentile_to_uniform(p, y_edges) for p in major_percentiles]
-    
-    # Compute percentages for different subsections
-    for ix in range(len(major_percentiles) - 1):
-        x_lo_uni = x_major_coords[ix]
-        x_hi_uni = x_major_coords[ix + 1]
-    
+      
     def coord_to_bin_idx(u):
         """Convert a uniform coordinate in [0..1] to a histogram bin index [0..bins)."""
         # e.g. u=0.3 => bin 15 if bins=50

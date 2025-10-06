@@ -29,6 +29,7 @@ from rdkit.Chem import rdFingerprintGenerator
 from pynndescent import NNDescent
 
 from fingerprint_computation import compute_fingerprints_from_smiles
+from metrics import ruzicka_similarity_sparse_numba
 
 
 def compound_nearest_neighbors(
@@ -132,11 +133,6 @@ def ruzicka_candidate_search(
         candidate_idx[i, :] = knn_indices[order]
         candidate_scores[i, :] = scores
     return candidate_idx, candidate_scores
-
-
-import numba
-from numba import prange
-from metrics import ruzicka_similarity_sparse_numba
 
 
 @numba.jit(nopython=True, fastmath=True, parallel=True)
