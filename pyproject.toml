@@ -21,3 +21,6 @@ dev = [
     "ruff",
     "pytest",
 ]
+
+[tool.ruff]
+extend-exclude = ["tests", "notebooks"]
