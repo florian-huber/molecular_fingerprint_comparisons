@@ -5,6 +5,7 @@
 data/
 figures/
 experiments/
+prototyping/
 
 build
 dist
